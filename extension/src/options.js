@@ -1,9 +1,6 @@
 /* @flow */
 import {getBrowser} from './common'
 
-// $FlowFixMe
-import OptionsSync from 'webext-options-sync';
-
 
 export type Options = {
     host: string;
@@ -143,19 +140,19 @@ function defaultOptions(): Options {
 }
 
 
-// TODO mm. don't really like having global object, but seems that it's easiest way to avoid race conditions
-// TODO https://github.com/fregante/webext-options-sync/issues/38 -- fixed now
-const _options = new OptionsSync({
-    defaults: defaultOptions(),
-});
-
-
-function optSync() {
-    return _options;
+async function optSync() {
+    const {default: OptionsSync} = await import(
+        /* webpackChunkName: "optionssync" */
+        // $FlowFixMe
+        'webext-options-sync'
+    )
+    return new OptionsSync({
+        defaults: defaultOptions(),
+    })
 }
 
 export async function getOptions(): Promise<Options> {
-    const r = await optSync().getAll()
+    const r = await (await optSync()).getAll()
     let smap = r.src_map
     if (typeof smap !== 'string') {
         // old format, we used to keep as a map
@@ -166,6 +163,6 @@ export async function getOptions(): Promise<Options> {
 }
 
 export async function setOptions(opts: Options) {
-    const os = optSync();
+    const os = await optSync();
     await os.set(opts);
 }

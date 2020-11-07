@@ -5,7 +5,8 @@
     "web_accessible_resources": [
         "sidebar.js",
         "sidebar.css",
-        "vendors_anchorme.js"
+        "vendors_anchorme.js",
+        "vendors_optionssync.js"
     ],
     "background": {
         "scripts": ["background.js"],
@@ -13,7 +14,11 @@
     },
     "content_scripts": [{
         "matches": ["<all_urls>"],
-        "js": ["background_injector.js", "vendors_anchorme.js"]
+        "js": [
+            "background_injector.js",
+            "vendors_anchorme.js",
+            "vendors_optionssync.js"
+        ]
     }],
     "options_ui": {
         "page": "options_page.html"
