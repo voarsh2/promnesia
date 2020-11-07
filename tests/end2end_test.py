@@ -542,7 +542,7 @@ def test_new_background_tab(tmp_path, browser):
     # bg_url_text = "El Proceso (The Process)"
     # TODO generate some fake data instead?
     with _test_helper(tmp_path, index_hypothesis, start_url, browser=browser) as helper:
-        confirm('you should see notification about contexts')
+        confirm('you should see notification about contexts') # TODO didn't show??
         helper.driver.find_element(By.XPATH, '//div[@class="logo"]/a').send_keys(Keys.CONTROL + Keys.ENTER)
         confirm('you should not see any new notifications')
         # TODO switch to new tab?
@@ -560,7 +560,7 @@ def test_local_page(tmp_path, browser):
     }
     url = PYTHON_DOC_URL
     with _test_helper(tmp_path, index_urls(urls), url, browser=browser) as helper:
-        confirm('grey icon')
+        confirm('grey icon') # TODO couldn't load the options chunk here???
         helper.driver.get(tutorial)
         confirm('green icon. MANUALLY: ACTIVATE SIDEBAR!. It should open sidebar with one visit')
         helper.driver.back()
@@ -583,7 +583,7 @@ def test_unreachable(tmp_path, browser):
         except:
             # results in exception because it's unreachable
             pass
-        confirm('green icon, no errors, desktop notification with contexts')
+        confirm('green icon, no errors, desktop notification with contexts') # TODO FIXME
 
 
 @uses_x
@@ -634,6 +634,7 @@ def test_fuzz(tmp_path, browser):
                 send_key('Ctrl+Shift+t')
                 sleep(0.1)
         trigger_callback(driver, cb)
+        # TODO??? whole bunch of errors??
         confirm("shouldn't result in 'unexpected error occured'; show only show single notification per page")
 
 
