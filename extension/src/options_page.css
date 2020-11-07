@@ -33,3 +33,12 @@ hr {
 pre {
     margin: 0 0 0 0;
 }
+
+
+div.codejar-linenumbers {
+    width: 2.5ch; /* default is a bit meh */
+}
+
+.codejar-wrap {
+    font-family: monospace;
+}

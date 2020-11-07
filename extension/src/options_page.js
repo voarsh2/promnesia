@@ -3,12 +3,6 @@ import {unwrap} from './common';
 import {getOptions, setOptions} from './options'
 import {defensifyAlert, alertError} from './notifications';
 
-// re: codemirror imports
-// err. that's a bit stupid, js injected css? surely it can be done via webpack and static files...
-// TODO right, I suppose that's why I need style bunder?
-// turned out more tedious than expected... https://github.com/codemirror/CodeMirror/issues/5484#issue-338185331
-
-
 // helpers for options
 class Option<T> {
     id: string
@@ -49,6 +43,8 @@ class Toggle extends Option<boolean> {
     }
 }
 
+
+var editors = {}
 class Editor extends Option<string> {
     mode: ?string
     constructor(id: string, {mode}) {
@@ -57,24 +53,21 @@ class Editor extends Option<string> {
     }
 
     set value(x: string): void {
-        this.editor.setValue(x)
+        this.editor.updateCode(x)
     }
 
     get value(): string {
-        return this.editor.getValue()
+        return this.editor.toString()
     }
 
-    bind({CodeMirror}): void {
-        CodeMirror(this.element, {
-            mode: this.mode,
-            lineNumbers: true,
-            value: 'FIXME default',
-        })
+    bind({Jar}): void {
+        const cls = 'language-' + (this.mode == null ? 'plaintext' : this.mode)
+        editors[this.id] = Jar(this.element)
     }
 
     get editor() {
         // $FlowFixMe
-        return this.element.querySelector('.CodeMirror').CodeMirror
+        return unwrap(editors[this.id])
     }
 }
 // end
@@ -88,38 +81,32 @@ const o_highlights_on  = new Toggle('highlight_id'          )
 // TODO ('dots_id');
 
 const o_blacklist    = new Editor('blacklist_id'   , {mode: null  })
-const o_filterlists  = new Editor('filterlists_id' , {mode: 'javascript'})
-const o_src_map      = new Editor('source_map_id'  , {mode: 'javascript'})
+const o_filterlists  = new Editor('filterlists_id' , {mode: 'json'})
+const o_src_map      = new Editor('source_map_id'  , {mode: 'json'})
 const o_position_css = new Editor('position_css_id', {mode: 'css' })
 const o_extra_css    = new Editor('extra_css_id'   , {mode: 'css' })
 
 
-// TODO meh. not sure how to make sure it's only imported once?..
-async function importCM() {
-    // TODO I don't really understand, what's up with these fucking chunks and their naming
-    // at least it reduces size of the options page
-    const {default: CodeMirror} = await import(
-        /* webpackChunkName: "codemirror-main" */
-        // $FlowFixMe
-        'codemirror/lib/codemirror.js'
-    )
-    // TODO just copy css in webpack directly??
-    await import(
-        /* webpackChunkName: "codemirror.css" */
-        // $FlowFixMe
-        'codemirror/lib/codemirror.css'
-    )
-    await import(
-        /* webpackChunkName: "codemirror-css-module" */
-        // $FlowFixMe
-        'codemirror/mode/css/css.js'
-    )
-    await import(
-        /* webpackChunkName: "codemirror-js-module" */
-        // $FlowFixMe
-        'codemirror/mode/javascript/javascript.js'
-    )
-    return CodeMirror
+async function importJar() {
+    const {CodeJar}         = await import('codejar/codejar.js')
+    const {withLineNumbers} = await import('codejar/linenumbers.js')
+
+    const {default: hljs  } = await import('highlight.js/lib/core.js')
+    for (const lname of ['json', 'css', 'plaintext']) {
+        const Lang = await import('highlight.js/lib/languages/' + lname + '.js')
+        hljs.registerLanguage(lname, Lang.default)
+    }
+    await import('highlight.js/styles/default.css')
+
+    // err. that's a bit stupid, js injected css? surely it can be done via webpack and static files...
+    const highlight = editor => {
+        // hack to trim old tags (highlight.js bug)
+        editor.textContent = editor.textContent
+        hljs.highlightBlock(editor)
+    }
+    // todo useBr??
+    const jar_factory = (el: HTMLElement) => new CodeJar(el, withLineNumbers(highlight))
+    return jar_factory
 }
 
 document.addEventListener('DOMContentLoaded', defensifyAlert(async () => {
@@ -132,7 +119,7 @@ document.addEventListener('DOMContentLoaded', defensifyAlert(async () => {
     o_highlights_on .value = opts.highlight_on
     // todo getDots().checked    = opts.dots;
 
-    const CodeMirror = await importCM()
+    const Jar = await importJar()
 
     // TODO it should know the syntax? or infer from the class??
     for (const [el, value] of [
@@ -142,7 +129,7 @@ document.addEventListener('DOMContentLoaded', defensifyAlert(async () => {
         [o_position_css, opts.position_css],
         [o_extra_css   , opts.extra_css   ],
     ]) {
-        el.bind({CodeMirror: CodeMirror})
+        el.bind({Jar: Jar})
         el.value = value
     }
 }));

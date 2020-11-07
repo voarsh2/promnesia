@@ -32,7 +32,8 @@
   "dependencies": {
     "anchorme": "^2.1.2",
     "basket.js": "^0.5.2",
-    "codemirror": "^5.48.2",
+    "codejar": "^3.2.2",
+    "highlight.js": "^10.3.2",
     "webext-options-sync": "^1.0.0"
   },
   "devDependencies": {
