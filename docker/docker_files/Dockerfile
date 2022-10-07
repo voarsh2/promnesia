@@ -18,4 +18,4 @@ ENV PPATH=/usr/src/promnesia:${PPATH}
 VOLUME /user_data
 
 EXPOSE 13131
-CMD ["python", "-m", "promnesia", "serve", "--db", "/user_data/promnesia.sqlite", "--port", "13131"]
+CMD ["python", "-m", "promnesia", "serve", "--db", "/root/.local/share/promnesia/promnesia.sqlite", "--port", "13131"]
